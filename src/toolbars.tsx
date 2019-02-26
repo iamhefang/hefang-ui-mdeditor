@@ -2,9 +2,11 @@ import {IToolBarItem} from "./IToolBarItem";
 import * as React from "react";
 import {Ace} from "ace-builds";
 import {formatDate, guid, range, repeat} from "hefang-js";
-import {MarkdownEditor} from "../index";
 import {Dialog, Icon} from "hefang-ui-react";
+import * as pkg from "../package.json"
 import Point = Ace.Point;
+import {Icons} from "./icons";
+import {MarkdownEditor} from "./MarkdownEditor";
 
 function insertMarkdown(content: string, ace: Ace.Editor, toFirst: boolean = false, forward: Point = null) {
     if (toFirst) {
@@ -217,16 +219,24 @@ export const toolsArray: IToolBarItem[] = [
                 minWidth: 600,
                 width: 800,
                 height: 600,
-                resizable: true
+                resizable: true,
+                maxHeight: window.innerHeight,
+                maxWidth: window.innerWidth
             })
         }
     },
     {
         id: 'about',
-        name: '帮助',
+        name: '关于',
         icon: 'info-circle',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            Dialog.alert('关于', '关于', {icon: 'info-circle'})
+            Dialog.alert(<div className="hui-dialog-content">
+                <p>开源在线 React Markdown 编辑器，{pkg.license}协议</p>
+                <p>基于 <a href="https://github.com/iamhefang/hefang-ui-react" target='_blank'>hefang-ui</a> 开发</p>
+            </div>, '关于 ' + pkg.name, {
+                icon: 'info-circle',
+                width: 500, height: 500
+            })
         }
     },
     {
@@ -244,7 +254,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '行内代码',
         icon: 'code',
         action: (editor, ace) => {
-            insertMarkdown('``', ace, false, {column: -1, row: 0})
+            insertMarkdown('`' + ace.getSelectedText() + '`', ace)
         }
     },
     {
@@ -271,6 +281,52 @@ export const toolsArray: IToolBarItem[] = [
                 width: 500, height: 500
             });
         }
+    },
+    {
+        id: 'fontawesome',
+        name: 'Font Awesome 图标',
+        icon: <Icon name='font-awesome' namespace={"fab"}/>,
+        action: (editor: MarkdownEditor, ace: Ace.Editor) => {
+            const selectedRowColumn = {}
+                , onClick = (name: string, namespace: string) => {
+                if (`${namespace}_${name}` in selectedRowColumn) {
+                    delete selectedRowColumn[`${namespace}_${name}`];
+                    document.getElementById(`td${namespace}_${name}`).style.background = 'none';
+                } else {
+                    document.getElementById(`td${namespace}_${name}`).style.background = 'gray';
+                    selectedRowColumn[`${namespace}_${name}`] = true;
+                }
+            };
+            Dialog.confirm(<div className="hui-dialog-content dialog-font-awesome">
+                {Icons.fa.map(icon =>
+                    <button id={`tdfa_${icon}`} className="no-border no-background"
+                            title={icon}
+                            onClick={e => onClick(icon, 'fa')}>
+                        <Icon name={icon}
+                              namespace={'fa'}/>
+                    </button>)}
+                {Icons.fab.map(icon =>
+                    <button id={`tdfab_${icon}`} className="no-border no-background"
+                            title={icon}
+                            onClick={e => onClick(icon, 'fab')}>
+                        <Icon name={icon}
+                              namespace={'fab'}/>
+                    </button>)}
+            </div>, "插入FontAwesome图标", () => {
+                let md = '';
+                for (let key in selectedRowColumn) {
+                    const [namespace, name] = key.split('_');
+                    md += `:${namespace} ${name}:\n`
+                }
+                insertMarkdown(md, ace)
+            }, {
+                icon: <Icon name='font-awesome' namespace={"fab"} className='hui-dialog-icon'/>,
+                width: 800,
+                height: 600,
+                maxHeight: window.innerHeight,
+                maxWidth: window.innerWidth
+            })
+        }
     }
 ];
 export const toolsMap: { [key: string]: IToolBarItem } = {};
@@ -296,7 +352,9 @@ range(1, 6).forEach(level => {
         name: (id === 'list-ol' ? '有序' : '无序') + '列表',
         icon: id,
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-
+            const text = ace.getSelectedText().trim()
+                , prefix = id === 'list-ol' ? '1. ' : '- ';
+            insertMarkdown(prefix + text.replace(/\n/g, `\n${prefix}`), ace)
         }
     })
 });

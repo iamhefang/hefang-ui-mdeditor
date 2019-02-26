@@ -50,6 +50,27 @@
   }
 }
 
+.dialog-font-awesome {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  td {
+    border: thin solid gray;
+    text-align: center;
+  }
+  button {
+    display: inline-block;
+    padding: .3rem 0;
+    border: thin solid gray;
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
 .toolbar-decollator {
   color: #d0d0d0;
 }

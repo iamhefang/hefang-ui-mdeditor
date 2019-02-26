@@ -1,15 +1,15 @@
 {
   "name": "hefang-ui-editor",
   "version": "1.0.0",
-  "description": "",
+  "description": "基于 hefang-ui-react 开发的 Markdown 编辑器",
   "main": "index.js",
   "scripts": {
     "test": "webpack -w --mode=development",
     "server": "cd dist && hs"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "hefang",
+  "license": "MIT",
   "devDependencies": {
     "@types/marked": "^0.6.1",
     "@types/react": "^16.8.4",
