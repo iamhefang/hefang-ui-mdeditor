@@ -65,9 +65,14 @@
   button {
     display: inline-block;
     padding: .3rem 0;
-    border: thin solid gray;
-    width: 2rem;
-    height: 2rem;
+    border: thin solid #cdcdcd;
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.5rem;
+    transition: background-color .35s;
+    &:hover {
+      background: #ededed;
+    }
   }
 }
 
@@ -89,6 +94,19 @@ ol.linenums {
   margin: 0 auto;
   padding: 45px;
   overflow: auto;
+}
+
+.markdown-body, .ace_scrollbar {
+  &::-webkit-scrollbar {
+    width: .4rem;
+    height: .4rem;
+    border-radius: .2rem;
+    background: rgb(216, 216, 216);
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: .2rem;
+    background: rgb(138, 138, 138)
+  }
 }
 
 @media (max-width: 767px) {

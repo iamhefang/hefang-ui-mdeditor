@@ -1,12 +1,12 @@
 import {IToolBarItem} from "./IToolBarItem";
 import * as React from "react";
 import {Ace} from "ace-builds";
-import {formatDate, guid, range, repeat} from "hefang-js";
-import {Dialog, Icon} from "hefang-ui-react";
+import {execute, formatDate, guid, range, repeat} from "hefang-js";
+import {Icon} from "hefang-ui-react";
 import * as pkg from "../package.json"
-import Point = Ace.Point;
 import {Icons} from "./icons";
 import {MarkdownEditor} from "./MarkdownEditor";
+import Point = Ace.Point;
 
 function insertMarkdown(content: string, ace: Ace.Editor, toFirst: boolean = false, forward: Point = null) {
     if (toFirst) {
@@ -88,18 +88,19 @@ export const toolsArray: IToolBarItem[] = [
         name: '链接',
         icon: 'link',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            Dialog.confirm(<div className='hui-dialog-content'>
+            editor.props.dialogConfirm(<form className='hui-dialog-content'>
                 <div className="form-group">
                     <label htmlFor="editorAddLinkTitle" className='display-block'>链接标题</label>
-                    <input type="text" className='hui-input display-block' id='editorAddLinkTitle'/>
+                    <input type="text" className='hui-input display-block' name='editorAddLinkTitle'/>
                 </div>
                 <div className="form-group">
                     <label htmlFor="editorAddLinkUrl" className='display-block'>链接地址</label>
-                    <input type="url" className='hui-input display-block' id='editorAddLinkUrl'/>
+                    <input type="url" className='hui-input display-block' name='editorAddLinkUrl'/>
                 </div>
-            </div>, "插入链接", () => {
-                const url = document.getElementById('editorAddLinkUrl') as HTMLInputElement
-                    , title = document.getElementById('editorAddLinkTitle') as HTMLInputElement;
+            </form>, "插入链接", (dialog) => {
+                const form = dialog.contentElement() as HTMLFormElement
+                    , url = form.editorAddLinkUrl  as HTMLInputElement
+                    , title = form.editorAddLinkTitle  as HTMLInputElement;
                 insertMarkdown(`[${title.value}](${url.value} "${title.value}")`, ace)
             }, {
                 icon: 'link',
@@ -114,7 +115,7 @@ export const toolsArray: IToolBarItem[] = [
         icon: 'table',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
             const id = guid();
-            Dialog.confirm(<form className='hui-dialog-content' id={id}>
+            editor.props.dialogConfirm(<form className='hui-dialog-content' id={id}>
                 行数：<input type="number" className='hui-input' name='rows' min={1} style={{width: '5rem'}}
                           defaultValue={'2'}/>
                 &nbsp;
@@ -136,8 +137,8 @@ export const toolsArray: IToolBarItem[] = [
                         <input type="radio" name='align' value='right'/> <Icon name='align-right'/>
                     </label>
                 </p>
-            </form>, "插入表格", () => {
-                const form = document.getElementById(id) as HTMLFormElement
+            </form>, "插入表格", (dialog) => {
+                const form = dialog.contentElement() as HTMLFormElement
                     , rows = +form.rows.value
                     , columns = +form.columns.value
                     , align = form.align.value
@@ -163,7 +164,7 @@ export const toolsArray: IToolBarItem[] = [
         icon: 'image',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
             const id = guid();
-            Dialog.confirm(<form id={id} className='hui-dialog-content'>
+            editor.props.dialogConfirm(<form id={id} className='hui-dialog-content'>
                 <div className="form-group">
                     <label htmlFor="editorAddLinkTitle" className='display-block'>图片地址</label>
                     <input type="url" className='hui-input display-block' name='url' placeholder={'图片所在地址'}/>
@@ -176,8 +177,8 @@ export const toolsArray: IToolBarItem[] = [
                     <label htmlFor="editorAddLinkUrl" className='display-block'>点击跳转</label>
                     <input type="url" className='hui-input display-block' name='link' placeholder='图片点击时跳转的链接'/>
                 </div>
-            </form>, '插入图片', () => {
-                const form = document.getElementById(id) as HTMLFormElement
+            </form>, '插入图片', (dialog) => {
+                const form = dialog.contentElement() as HTMLFormElement
                     , url = form.url.value
                     , description = form.description.value
                     , link = form.link.value;
@@ -202,7 +203,11 @@ export const toolsArray: IToolBarItem[] = [
             return <Icon name={editor.state.showPreview ? 'eye-slash' : 'eye'}/>
         },
         action: function (editor: MarkdownEditor, ace: Ace.Editor) {
-            editor.setState({showPreview: !editor.state.showPreview})
+            if (execute(editor.props.onPreviewVisibleChange, !editor.state.showPreview) !== false) {
+                editor.setState({showPreview: !editor.state.showPreview}, () => {
+                    editor.renderHtml(ace.getValue())
+                })
+            }
         }
     },
     {
@@ -210,8 +215,8 @@ export const toolsArray: IToolBarItem[] = [
         name: '帮助',
         icon: 'question-circle',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            Dialog.alert(<div className='hui-dialog-content'
-                              style={{overflow: 'auto', width: '100%', height: '100%'}}>
+            editor.props.dialogAlert(<div className='hui-dialog-content'
+                                          style={{overflow: 'auto', width: '100%', height: '100%'}}>
                 帮助
             </div>, '帮助', {
                 icon: 'question-circle',
@@ -230,7 +235,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '关于',
         icon: 'info-circle',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            Dialog.alert(<div className="hui-dialog-content">
+            editor.props.dialogAlert(<div className="hui-dialog-content">
                 <p>开源在线 React Markdown 编辑器，{pkg.license}协议</p>
                 <p>基于 <a href="https://github.com/iamhefang/hefang-ui-react" target='_blank'>hefang-ui</a> 开发</p>
             </div>, '关于 ' + pkg.name, {
@@ -244,7 +249,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '清空内容',
         icon: 'eraser',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            Dialog.confirm("确定要清空全部内容吗？", () => {
+            editor.props.dialogConfirm("确定要清空全部内容吗？", () => {
                 ace.setValue('')
             })
         }
@@ -263,16 +268,29 @@ export const toolsArray: IToolBarItem[] = [
         icon: 'file-code',
         action: (editor, ace) => {
             const id = guid();
-            Dialog.confirm(<form id={id} className='hui-dialog-content'>
+            editor.props.dialogConfirm(<form id={id} className='hui-dialog-content'>
                 <p>代码语言：<select name="language" className='hui-input'>
                     <option value="">请选择代码语言</option>
                     <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="bash">Bash</option>
+                    <option value="sql">SQL</option>
+                    <option value="html">HTML</option>
+                    <option value="xml">XML</option>
+                    <option value="css">CSS</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="makefile">Makefile</option>
+                    <option value="rust">Rust</option>
+                    <option value="sql">SQL</option>
+                    <option value="jsx">React JSX</option>
+                    <option value="php">PHP</option>
                 </select></p>
                 <p style={{marginTop: '1rem'}}>
                     <textarea name='code' className='display-block hui-input no-resize' rows={15}/>
                 </p>
-            </form>, "插入代码块", () => {
-                const form = document.getElementById(id) as HTMLFormElement
+            </form>, "插入代码块", (dialog) => {
+                const form = dialog.contentElement() as HTMLFormElement
                     , lang = form.language.value
                     , code = form.code.value;
                 insertMarkdown('\n```' + lang + '\n' + code + '\n```\n', ace)
@@ -297,7 +315,7 @@ export const toolsArray: IToolBarItem[] = [
                     selectedRowColumn[`${namespace}_${name}`] = true;
                 }
             };
-            Dialog.confirm(<div className="hui-dialog-content dialog-font-awesome">
+            editor.props.dialogConfirm(<div className="hui-dialog-content dialog-font-awesome">
                 {Icons.fa.map(icon =>
                     <button id={`tdfa_${icon}`} className="no-border no-background"
                             title={icon}
@@ -312,7 +330,7 @@ export const toolsArray: IToolBarItem[] = [
                         <Icon name={icon}
                               namespace={'fab'}/>
                     </button>)}
-            </div>, "插入FontAwesome图标", () => {
+            </div>, "插入FontAwesome图标", (dialog) => {
                 let md = '';
                 for (let key in selectedRowColumn) {
                     const [namespace, name] = key.split('_');
@@ -338,9 +356,23 @@ range(1, 6).forEach(level => {
         name: '标题' + level,
         icon: <span>H{level}</span>,
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            const pos = ace.getCursorPosition();
-            pos.column = 0;
-            ace.getSession().insert(pos, repeat('#', level) + ' ');
+            const pos = ace.getCursorPosition()
+                , doc = ace.getSession().getDocument()
+                , line = doc.getLine(pos.row)
+                , text = repeat('#', level) + ' ';
+
+            if (line.startsWith(text)) {
+                ace.getSelection().selectLine();
+                insertMarkdown(line.replace(text, '') + "\n", ace);
+                ace.moveCursorTo(pos.row, pos.column - level);
+            } else if (/^#{1,6} (.*?)/i.test(line)) {
+                ace.getSelection().selectLine();
+                insertMarkdown(line.replace(/#{1,6} /, text) + "\n", ace);
+                ace.moveCursorTo(pos.row, pos.column - level);
+            } else {
+                pos.column = 0;
+                ace.getSession().insert(pos, repeat('#', level) + ' ');
+            }
             ace.focus();
         }
     })
@@ -354,7 +386,12 @@ range(1, 6).forEach(level => {
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
             const text = ace.getSelectedText().trim()
                 , prefix = id === 'list-ol' ? '1. ' : '- ';
-            insertMarkdown(prefix + text.replace(/\n/g, `\n${prefix}`), ace)
+
+            if (text) {
+                insertMarkdown(prefix + text.replace(/\n/g, `\n${prefix}`), ace)
+            } else {
+                insertMarkdown(prefix, ace, true)
+            }
         }
     })
 });
@@ -362,3 +399,4 @@ range(1, 6).forEach(level => {
 toolsArray.forEach(tool => {
     toolsMap[tool.id] = tool;
 });
+

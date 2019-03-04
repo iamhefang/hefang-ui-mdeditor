@@ -5,6 +5,7 @@ import * as path from "path";
 const config: Configuration = {
     entry: {
         index: './index.tsx',
+        example: './example.tsx'
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -28,41 +29,41 @@ const config: Configuration = {
         ]
     },
     externals: {
-        'react': {
-            commonjs: 'react',
-            commonjs2: 'react',
-            amd: 'react',
-            root: 'React'
-        },
-        'react-dom': {
-            commonjs: 'react-dom',
-            commonjs2: 'react-dom',
-            amd: 'react-dom',
-            root: 'ReactDOM'
-        },
-        'hefang-js': {
-            commonjs: 'hefang-js',
-            commonjs2: 'hefang-js',
-            amd: 'hefang-js',
-            root: 'H'
-        },
-        'hefang-ui-react': {
-            commonjs: 'hefang-ui-react',
-            commonjs2: 'hefang-ui-react',
-            amd: 'hefang-ui-react',
-            root: 'HuiReact'
-        },
-        'ace-builds': {
-            commonjs: 'ace-builds',
-            commonjs2: 'ace-builds',
-            amd: 'ace-builds',
-            root: 'ace'
-        }
+        // 'react': {
+        //     commonjs: 'react',
+        //     commonjs2: 'react',
+        //     amd: 'react',
+        //     root: 'React'
+        // },
+        // 'react-dom': {
+        //     commonjs: 'react-dom',
+        //     commonjs2: 'react-dom',
+        //     amd: 'react-dom',
+        //     root: 'ReactDOM'
+        // },
+        // 'hefang-js': {
+        //     commonjs: 'hefang-js',
+        //     commonjs2: 'hefang-js',
+        //     amd: 'hefang-js',
+        //     root: 'H'
+        // },
+        // 'hefang-ui-react': {
+        //     commonjs: 'hefang-ui-react',
+        //     commonjs2: 'hefang-ui-react',
+        //     amd: 'hefang-ui-react',
+        //     root: 'HuiReact'
+        // },
+        // 'ace-builds': {
+        //     commonjs: 'ace-builds',
+        //     commonjs2: 'ace-builds',
+        //     amd: 'ace-builds',
+        //     root: 'ace'
+        // }
     },
     plugins: [
         new HtmlWebpackPlugin({
             filename: 'index.html',
-            chunks: ['index'],
+            chunks: ['example'],
             inject: "body",
             minify: {
                 collapseBooleanAttributes: true,
@@ -76,7 +77,6 @@ const config: Configuration = {
         })
     ]
 };
-
 
 
 function page(name: string, tsx: string = null, template: string = "./index.html") {

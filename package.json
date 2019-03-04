@@ -1,16 +1,18 @@
 {
-  "name": "hefang-ui-editor",
-  "version": "1.0.0",
+  "name": "hefang-ui-mdeditor",
+  "version": "1.0.3",
   "description": "基于 hefang-ui-react 开发的 Markdown 编辑器",
   "main": "index.js",
   "scripts": {
     "test": "webpack -w --mode=development",
+    "build": "webpack -p --mode=production",
     "server": "cd dist && hs"
   },
   "keywords": [],
   "author": "hefang",
   "license": "MIT",
   "devDependencies": {
+    "@types/katex": "^0.10.1",
     "@types/marked": "^0.6.1",
     "@types/react": "^16.8.4",
     "@types/react-dom": "^16.8.2",
@@ -27,9 +29,11 @@
   "dependencies": {
     "ace-builds": "^1.4.3",
     "code-prettify": "^0.1.0",
+    "flowchart.js": "^1.11.3",
     "github-markdown-css": "^3.0.1",
     "hefang-js": "^1.1.6",
-    "hefang-ui-react": "E:\\DevDir\\hefang-ui-react\\hefang-ui-react-1.0.12.tgz",
+    "hefang-ui-react": "^1.0.15",
+    "katex": "^0.10.1",
     "marked": "^0.6.1",
     "react": "^16.4.0",
     "react-dom": "^16.4.0"

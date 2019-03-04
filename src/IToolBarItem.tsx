@@ -1,6 +1,6 @@
 import {ToolBarAction} from "./ToolBarAction";
 import {ReactNode} from "react";
-import {MarkdownEditor} from "../index";
+import {MarkdownEditor} from "./MarkdownEditor";
 
 export interface IToolBarItem {
     id: string
