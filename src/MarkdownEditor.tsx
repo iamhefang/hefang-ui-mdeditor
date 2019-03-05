@@ -2,15 +2,18 @@ import * as React from "react";
 import {RefObject} from "react";
 import {Ace, edit} from "ace-builds";
 import {execute, guid, isFunction, type, Types} from "hefang-js";
-import "code-prettify/src/prettify.css"
-import "github-markdown-css/github-markdown.css"
 import {Dialog, Icon} from "hefang-ui-react";
 import * as marked from "marked"
 import {Renderer} from "marked"
 import "code-prettify";
-import "../index.css"
 import {FontAwesomeRenderer} from "./marked/renderer/FontAwesomeRenderer";
 import {toolsMap} from "./toolbars";
+import {IToolBarItem} from "./IToolBarItem";
+
+
+// import "code-prettify/src/prettify.css"
+// import "github-markdown-css/github-markdown.css"
+// import "../index.css"
 
 declare const PR;
 
@@ -24,6 +27,7 @@ export interface MarkdownEditorProps {
     onPreviewVisibleChange?: (shown: boolean) => boolean | void
     value?: string
     theme?: string
+    customTools?: IToolBarItem[]
     dialogConfirm?: typeof Dialog.confirm
     dialogAlert?: typeof Dialog.alert
 }
@@ -33,7 +37,7 @@ export interface MarkdownEditorState {
 }
 
 export class MarkdownEditor extends React.Component<MarkdownEditorProps, MarkdownEditorState> {
-    private static readonly defaultProps: MarkdownEditorProps = {
+    public static readonly defaultProps: MarkdownEditorProps = {
         showPreview: true,
         toolbar: [
             'undo', 'redo', '|',
@@ -41,19 +45,21 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
             'h1', 'h2', 'h3', 'h4', 'h5', 'h6', '|',
             'list-ol', 'list-ul', 'line', '|',
             'link', 'table', 'image', '|',
-            'code', 'code-block', 'clock', 'fontawesome', 'clean', '|',
+            'keyboard', 'code', 'code-block', 'clock', 'fontawesome', 'clean', '|',
             'preview', 'help', 'about'
         ],
         bindScroll: true,
         theme: 'light',
         dialogConfirm: Dialog.confirm,
-        dialogAlert: Dialog.alert
+        dialogAlert: Dialog.alert,
+        customTools: []
     };
     private ace: Ace.Editor;
     private renderer: Renderer = new FontAwesomeRenderer();
     private id: string;
     private silent: boolean = false;
     private refPreview: RefObject<HTMLDivElement> = React.createRef();
+    private toolMap: { [key: string]: IToolBarItem } = toolsMap;
 
     constructor(props: MarkdownEditorProps) {
         super(props);
@@ -61,6 +67,9 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         this.state = {
             showPreview: props.showPreview,
         };
+        props.customTools.forEach(item => {
+            this.toolMap[item.id] = item;
+        })
     }
 
     private onChange = () => {
@@ -111,8 +120,8 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
                 return <span className='toolbar-decollator'>&nbsp;&nbsp;|&nbsp;&nbsp;</span>
             } else if (id === '\\') {
                 return <br/>
-            } else if (id in toolsMap) {
-                const tool = toolsMap[id];
+            } else if (id in this.toolMap) {
+                const tool = this.toolMap[id];
                 let icon = tool.icon;
                 if (type(icon) === Types.String) {
                     icon = <Icon name={icon as string}/>

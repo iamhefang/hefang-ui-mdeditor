@@ -11,6 +11,7 @@ const config: Configuration = {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name].js?v=[hash]',
         libraryTarget: "umd",
+        library: "HuiMarkdownEditor",
         umdNamedDefine: false
     },
     resolve: {
@@ -29,36 +30,54 @@ const config: Configuration = {
         ]
     },
     externals: {
-        // 'react': {
-        //     commonjs: 'react',
-        //     commonjs2: 'react',
-        //     amd: 'react',
-        //     root: 'React'
-        // },
-        // 'react-dom': {
-        //     commonjs: 'react-dom',
-        //     commonjs2: 'react-dom',
-        //     amd: 'react-dom',
-        //     root: 'ReactDOM'
-        // },
-        // 'hefang-js': {
-        //     commonjs: 'hefang-js',
-        //     commonjs2: 'hefang-js',
-        //     amd: 'hefang-js',
-        //     root: 'H'
-        // },
-        // 'hefang-ui-react': {
-        //     commonjs: 'hefang-ui-react',
-        //     commonjs2: 'hefang-ui-react',
-        //     amd: 'hefang-ui-react',
-        //     root: 'HuiReact'
-        // },
-        // 'ace-builds': {
-        //     commonjs: 'ace-builds',
-        //     commonjs2: 'ace-builds',
-        //     amd: 'ace-builds',
-        //     root: 'ace'
-        // }
+        'react': {
+            commonjs: 'react',
+            commonjs2: 'react',
+            amd: 'react',
+            root: 'React'
+        },
+        'react-dom': {
+            commonjs: 'react-dom',
+            commonjs2: 'react-dom',
+            amd: 'react-dom',
+            root: 'ReactDOM'
+        },
+        'hefang-js': {
+            commonjs: 'hefang-js',
+            commonjs2: 'hefang-js',
+            amd: 'hefang-js',
+            root: 'H'
+        },
+        'hefang-ui-react': {
+            commonjs: 'hefang-ui-react',
+            commonjs2: 'hefang-ui-react',
+            amd: 'hefang-ui-react',
+            root: 'HuiReact'
+        },
+        'ace-builds': {
+            commonjs: 'ace-builds',
+            commonjs2: 'ace-builds',
+            amd: 'ace-builds',
+            root: 'ace'
+        },
+        'code-prettify': {
+            commonjs: 'code-prettify',
+            commonjs2: 'code-prettify',
+            amd: 'code-prettify',
+            root: 'PR'
+        },
+        'katex': {
+            commonjs: 'katex',
+            commonjs2: 'katex',
+            amd: 'katex',
+            root: 'katex'
+        },
+        'marked': {
+            commonjs: 'marked',
+            commonjs2: 'marked',
+            amd: 'marked',
+            root: 'marked'
+        }
     },
     plugins: [
         new HtmlWebpackPlugin({

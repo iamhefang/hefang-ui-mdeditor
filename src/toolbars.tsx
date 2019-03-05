@@ -1,8 +1,8 @@
 import {IToolBarItem} from "./IToolBarItem";
 import * as React from "react";
-import {Ace} from "ace-builds";
+import {Ace, edit} from "ace-builds";
 import {execute, formatDate, guid, range, repeat} from "hefang-js";
-import {Icon} from "hefang-ui-react";
+import {DialogOperater, Icon} from "hefang-ui-react";
 import * as pkg from "../package.json"
 import {Icons} from "./icons";
 import {MarkdownEditor} from "./MarkdownEditor";
@@ -26,6 +26,24 @@ function insertMarkdown(content: string, ace: Ace.Editor, toFirst: boolean = fal
     ace.focus();
 }
 
+const langs = {
+    java: "Java",
+    python: "Python",
+    bash: "Bash",
+    sql: "SQL",
+    html: "HTML",
+    xml: "XML",
+    css: "CSS",
+    javascript: "JavaScript",
+    typescript: "TypeScript",
+    makefile: "Makefile",
+    rust: "Rust",
+    jsx: "React JSX",
+    php: "PHP",
+    markdown: "Markdown",
+    cpp: 'C/C++'
+};
+
 export const toolsArray: IToolBarItem[] = [
     {
         id: 'undo',
@@ -48,7 +66,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '粗体',
         icon: 'bold',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-
+            insertMarkdown('**' + ace.getSelectedText() + '**', ace)
         }
     },
     {
@@ -215,16 +233,45 @@ export const toolsArray: IToolBarItem[] = [
         name: '帮助',
         icon: 'question-circle',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            editor.props.dialogAlert(<div className='hui-dialog-content'
+            editor.props.dialogAlert(<div className='hui-dialog-content markdown-body'
                                           style={{overflow: 'auto', width: '100%', height: '100%'}}>
-                帮助
+                <h2>快捷键</h2>
+                <table style={{width: '100%'}}>
+                    <thead>
+                    <tr>
+                        <th>按键</th>
+                        <th>功能</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>
+                            <kbd>Ctrl</kbd>+<kbd>D</kbd>
+                        </td>
+                        <td>删除当前行</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <kbd>Ctrl</kbd>+<kbd>F</kbd>
+                        </td>
+                        <td>搜索</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <kbd>Ctrl</kbd>+<kbd>H</kbd>
+                        </td>
+                        <td>替换</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>, '帮助', {
                 icon: 'question-circle',
                 minHeight: 450,
                 minWidth: 600,
-                width: 800,
-                height: 600,
+                width: 600,
+                height: 450,
                 resizable: true,
+                maximizable: true,
                 maxHeight: window.innerHeight,
                 maxWidth: window.innerWidth
             })
@@ -235,13 +282,76 @@ export const toolsArray: IToolBarItem[] = [
         name: '关于',
         icon: 'info-circle',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            editor.props.dialogAlert(<div className="hui-dialog-content">
-                <p>开源在线 React Markdown 编辑器，{pkg.license}协议</p>
-                <p>基于 <a href="https://github.com/iamhefang/hefang-ui-react" target='_blank'>hefang-ui</a> 开发</p>
-            </div>, '关于 ' + pkg.name, {
-                icon: 'info-circle',
-                width: 500, height: 500
-            })
+            editor.props.dialogAlert(
+                <div className="hui-dialog-content markdown-body"
+                     style={{padding: '1rem'}}>
+                    <div style={{marginBottom: '1rem'}}>
+                        <img src="https://img.shields.io/github/stars/iamhefang/hefang-ui-mdeditor.svg" alt="stars"/>
+                        &nbsp;
+                        <img src="https://img.shields.io/github/forks/iamhefang/hefang-ui-mdeditor.svg" alt="forks"/>
+                        &nbsp;
+                        <img src="https://img.shields.io/github/issues/iamhefang/hefang-ui-mdeditor.svg" alt="issues"/>
+                    </div>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>项目</th>
+                            <th>依赖项目</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>
+                                <ol>
+                                    <li>基于 React</li>
+                                    <li>
+                                        在 <a href="https://github.com/iamhefang/hefang-ui-mdeditor"
+                                             target='_blank'>Github</a> 开源
+                                    </li>
+                                    <li>可<a href="http://hefang.link/markdown.html" target='_blank'>在线使用</a></li>
+                                    <li>免费</li>
+                                    <li>可商用</li>
+                                    <li>
+                                        <a href="https://github.com/iamhefang/hefang-ui-mdeditor/blob/master/LICENSE"
+                                           target='_blank'>{pkg.license}</a>
+                                    </li>
+                                </ol>
+                            </td>
+                            <td>
+                                <ol>
+                                    <li>
+                                        <a href="https://reactjs.org/" target='_blank'>React</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://github.com/iamhefang/hefang-ui-react"
+                                           target='_blank'>hefang-ui</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://github.com/markedjs/marked" target='_blank'>marked</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://fontawesome.com" target='_blank'>FontAwesome</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://github.com/google/code-prettify"
+                                           target='_blank'>code-prettify</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://github.com/sindresorhus/github-markdown-css"
+                                           target='_blank'>github-markdown-css</a>
+                                    </li>
+                                    <li>
+                                        <a href="https://github.com/adrai/flowchart.js" target='_blank'>flowchart.js</a>
+                                    </li>
+                                </ol>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>, '关于 ' + pkg.name, {
+                    icon: 'info-circle',
+                    width: 420, height: 420
+                })
         }
     },
     {
@@ -259,44 +369,59 @@ export const toolsArray: IToolBarItem[] = [
         name: '行内代码',
         icon: 'code',
         action: (editor, ace) => {
-            insertMarkdown('`' + ace.getSelectedText() + '`', ace)
+            const txt = ace.getSelectedText();
+            insertMarkdown('`' + txt + '`', ace, false, {row: 0, column: txt ? 0 : -1})
         }
     },
+    {
+        id: 'keyboard',
+        name: '插入按键',
+        icon: 'keyboard',
+        action: (editor, ace) => {
+            const txt = ace.getSelectedText();
+            insertMarkdown('<kbd>' + txt + '</kbd>', ace, false, {row: 0, column: txt ? 0 : -6})
+        }
+    },
+
     {
         id: 'code-block',
         name: '代码块',
         icon: 'file-code',
         action: (editor, ace) => {
-            const id = guid();
+            let aceEditor: Ace.Editor, lang = '';
+            const id = guid()
+                , onLangChange = e => {
+                if (e.currentTarget.value) {
+                    aceEditor.setOption('mode', 'ace/mode/' + e.currentTarget.value);
+                    lang = e.currentTarget.value;
+                }
+            };
             editor.props.dialogConfirm(<form id={id} className='hui-dialog-content'>
-                <p>代码语言：<select name="language" className='hui-input'>
+                <p>代码语言：<select name="language"
+                                className='hui-input'
+                                onChange={onLangChange}
+                                id={`lang${id}`}>
                     <option value="">请选择代码语言</option>
-                    <option value="java">Java</option>
-                    <option value="python">Python</option>
-                    <option value="bash">Bash</option>
-                    <option value="sql">SQL</option>
-                    <option value="html">HTML</option>
-                    <option value="xml">XML</option>
-                    <option value="css">CSS</option>
-                    <option value="javascript">JavaScript</option>
-                    <option value="typescript">TypeScript</option>
-                    <option value="makefile">Makefile</option>
-                    <option value="rust">Rust</option>
-                    <option value="sql">SQL</option>
-                    <option value="jsx">React JSX</option>
-                    <option value="php">PHP</option>
+                    {Object.keys(langs).map(value => <option value={value}>{langs[value]}</option>)}
                 </select></p>
-                <p style={{marginTop: '1rem'}}>
-                    <textarea name='code' className='display-block hui-input no-resize' rows={15}/>
-                </p>
+                <div id={`aceeditor${id}`} style={{height: '20rem', marginTop: '1rem'}}
+                     className='display-block hui-input no-resize'/>
             </form>, "插入代码块", (dialog) => {
-                const form = dialog.contentElement() as HTMLFormElement
-                    , lang = form.language.value
-                    , code = form.code.value;
-                insertMarkdown('\n```' + lang + '\n' + code + '\n```\n', ace)
+                insertMarkdown('\n```' + lang + '\n' + aceEditor.getValue().replace(/`/g, '&#96;') + '\n```\n', ace)
             }, {
                 icon: 'file-code',
-                width: 500, height: 500
+                width: 500, height: 500,
+                componentDidMount: (dialog: DialogOperater) => {
+                    const lang = (document.getElementById(`lang${id}`) as HTMLSelectElement).value
+                        , opt: Partial<Ace.EditorOptions> = {
+                        theme: 'ace/theme/github',
+                        fontSize: 16
+                    };
+                    if (lang) {
+                        opt.mode = `ace/mode/${lang}`
+                    }
+                    aceEditor = edit(`aceeditor${id}`, opt);
+                }
             });
         }
     },
@@ -348,7 +473,6 @@ export const toolsArray: IToolBarItem[] = [
     }
 ];
 export const toolsMap: { [key: string]: IToolBarItem } = {};
-
 
 range(1, 6).forEach(level => {
     toolsArray.push({
