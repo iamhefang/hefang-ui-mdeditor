@@ -9,11 +9,10 @@ import "code-prettify";
 import {FontAwesomeRenderer} from "./marked/renderer/FontAwesomeRenderer";
 import {toolsMap} from "./toolbars";
 import {IToolBarItem} from "./IToolBarItem";
+import {ClipboardEventHandler} from "react";
+import {DragEventHandler} from "react";
+import Point = Ace.Point;
 
-
-// import "code-prettify/src/prettify.css"
-// import "github-markdown-css/github-markdown.css"
-// import "../index.css"
 
 declare const PR;
 
@@ -30,6 +29,8 @@ export interface MarkdownEditorProps {
     customTools?: IToolBarItem[]
     dialogConfirm?: typeof Dialog.confirm
     dialogAlert?: typeof Dialog.alert
+    enableUpload?: boolean
+    onFileUpload?: (files: FileList, editor: MarkdownEditor) => boolean | void
 }
 
 export interface MarkdownEditorState {
@@ -72,6 +73,41 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         })
     }
 
+    public insertMarkdown = (content: string, toFirst: boolean = false, forward: Point = null) => {
+        if (!this.ace) return;
+        if (toFirst) {
+            const pos = this.ace.getCursorPosition();
+            pos.column = 0;
+            this.ace.getSession().insert(pos, content);
+        } else {
+            this.ace.insert(content);
+        }
+        if (forward) {
+            const pos = this.ace.getCursorPosition();
+            pos.column += forward.column;
+            pos.row += forward.row;
+            this.ace.moveCursorTo(pos.row, pos.column);
+        }
+        this.ace.focus();
+    };
+
+    public insertImage = (url: string, description?: string, link?: string) => {
+        description = description ? ` "${description}"` : '""';
+
+        const img = `![${description.trim()}](${url}${description})`;
+        let md = link ? `[${img}](${link}${description})` : img;
+        this.insertMarkdown(`\n${md}\n`, true)
+    };
+
+    public insertCodeBlock = (code: string, language?: string) => {
+        code = code.replace(/`/g, '&#96;');
+        this.insertMarkdown('\n```' + language + "\n" + code + '\n```\n')
+    };
+
+    public clean = () => {
+        this.ace.setValue('')
+    };
+
     private onChange = () => {
         const markdown = this.ace.getValue()
             , html = this.renderHtml(markdown);
@@ -88,13 +124,20 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
     componentDidMount() {
         this.ace = edit(`editor${this.id}`, {
             mode: 'ace/mode/markdown',
-            theme: 'ace/theme/github'
+            theme: 'ace/theme/github',
+            wrap: 'free'
         });
         this.ace.setValue(this.props.value || '');
         this.onChange();
         this.ace.clearSelection();
         this.ace.focus();
-        this.ace.on("change", this.onChange)
+        this.ace.on("change", this.onChange);
+        this.ace.getSession().on("changeScrollTop", scrollTop => {
+            this.state.showPreview && this.props.bindScroll && (this.refPreview.current.scrollTop = scrollTop)
+        });
+        this.refPreview.current.addEventListener('scroll', () => {
+            this.ace.getSession().setScrollTop(this.refPreview.current.scrollTop)
+        })
     }
 
     componentWillReceiveProps(nextProps: MarkdownEditorProps) {
@@ -113,6 +156,19 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         }
     }
 
+    private handlePastedFile: ClipboardEventHandler<HTMLDivElement> = (e) => {
+        if (!this.props.enableUpload || e.clipboardData.files.length < 1) return true;
+        execute(this.props.onFileUpload, e.clipboardData.files, this);
+        e.stopPropagation();
+        e.preventDefault();
+        return false;
+    };
+
+    private handleDraggedFile: DragEventHandler<HTMLDivElement> = (e) => {
+        if (!this.props.enableUpload || e.dataTransfer.files.length < 1) return;
+        e.dataTransfer.dropEffect = "copy";
+        execute(this.props.onFileUpload, e.dataTransfer.files, this)
+    };
 
     private renderToolbar = () => {
         return this.props.toolbar.map(id => {
@@ -143,7 +199,9 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
                 {this.renderToolbar()}
             </div>
             <div className='flex-1 display-flex-row'>
-                <div id={`editor${this.id}`} className='flex-1 markdown-editor-ace'/>
+                <div id={`editor${this.id}`} className='flex-1 markdown-editor-ace'
+                     onPaste={this.handlePastedFile}
+                     onDrag={this.handleDraggedFile}/>
                 {this.state.showPreview ?
                     <div className="flex-1 markdown-body"
                          ref={this.refPreview}/> : undefined}

@@ -6,25 +6,6 @@ import {DialogOperater, Icon} from "hefang-ui-react";
 import * as pkg from "../package.json"
 import {Icons} from "./icons";
 import {MarkdownEditor} from "./MarkdownEditor";
-import Point = Ace.Point;
-
-function insertMarkdown(content: string, ace: Ace.Editor, toFirst: boolean = false, forward: Point = null) {
-    if (toFirst) {
-        const pos = ace.getCursorPosition();
-        pos.column = 0;
-        ace.getSession().insert(pos, content);
-    } else {
-        ace.insert(content);
-    }
-    if (forward) {
-        // forward = extend(true, forward, {row: 0, column: 0});
-        const pos = ace.getCursorPosition();
-        pos.column += forward.column;
-        pos.row += forward.row;
-        ace.moveCursorTo(pos.row, pos.column);
-    }
-    ace.focus();
-}
 
 const langs = {
     java: "Java",
@@ -66,7 +47,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '粗体',
         icon: 'bold',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            insertMarkdown('**' + ace.getSelectedText() + '**', ace)
+            editor.insertMarkdown('**' + ace.getSelectedText() + '**')
         }
     },
     {
@@ -90,7 +71,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '引用',
         icon: 'quote-left',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            insertMarkdown("> ", ace, true)
+            editor.insertMarkdown("> ", true)
         }
     },
     {
@@ -98,7 +79,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '横线',
         icon: 'minus',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            insertMarkdown("\n----------\n\n", ace, true)
+            editor.insertMarkdown("\n----------\n\n", true)
         }
     },
     {
@@ -117,9 +98,9 @@ export const toolsArray: IToolBarItem[] = [
                 </div>
             </form>, "插入链接", (dialog) => {
                 const form = dialog.contentElement() as HTMLFormElement
-                    , url = form.editorAddLinkUrl  as HTMLInputElement
-                    , title = form.editorAddLinkTitle  as HTMLInputElement;
-                insertMarkdown(`[${title.value}](${url.value} "${title.value}")`, ace)
+                    , url = form.editorAddLinkUrl as HTMLInputElement
+                    , title = form.editorAddLinkTitle as HTMLInputElement;
+                editor.insertMarkdown(`[${title.value}](${url.value} "${title.value}")`)
             }, {
                 icon: 'link',
                 width: 345,
@@ -160,7 +141,7 @@ export const toolsArray: IToolBarItem[] = [
                     , rows = +form.rows.value
                     , columns = +form.columns.value
                     , align = form.align.value
-                    , lines = repeat('|', columns + 1)
+                    , lines = repeat('  |  ', columns + 1).trim()
                     , lineArr = lines.split('')
                     , alignMap = {
                     left: ':-----------',
@@ -168,7 +149,7 @@ export const toolsArray: IToolBarItem[] = [
                     right: '-----------:',
                     none: '-----------'
                 };
-                insertMarkdown(`\n${lines}\n${lineArr.join(alignMap[align])}\n${repeat(lines + "\n", rows)}\n`, ace)
+                editor.insertMarkdown(`\n${lines}\n${lineArr.join(alignMap[align])}\n${repeat(lines + "\n", rows)}\n`)
             }, {
                 icon: 'link',
                 width: 310,
@@ -185,7 +166,14 @@ export const toolsArray: IToolBarItem[] = [
             editor.props.dialogConfirm(<form id={id} className='hui-dialog-content'>
                 <div className="form-group">
                     <label htmlFor="editorAddLinkTitle" className='display-block'>图片地址</label>
-                    <input type="url" className='hui-input display-block' name='url' placeholder={'图片所在地址'}/>
+                    <div className="display-flex-row">
+                        <input type="url" className='hui-input flex-1' name='url' placeholder={'图片所在地址'}/>
+                        {editor.props.enableUpload ? <label className="hui-btn">
+                            <input type="file" style={{display: 'none'}} onChange={e => {
+                                execute(editor.props.onFileUpload, e.target.files,)
+                            }}/> 上传
+                        </label> : undefined}
+                    </div>
                 </div>
                 <div className="form-group">
                     <label htmlFor="editorAddLinkUrl" className='display-block'>图片描述</label>
@@ -200,7 +188,7 @@ export const toolsArray: IToolBarItem[] = [
                     , url = form.url.value
                     , description = form.description.value
                     , link = form.link.value;
-                insertMarkdown(`[![${description}](${url} "${description}")](${link} "${description}")`, ace, true)
+                editor.insertImage(url, description, link)
             }, {icon: 'image', width: 400, height: 355})
         }
     },
@@ -209,7 +197,7 @@ export const toolsArray: IToolBarItem[] = [
         name: '当前时间',
         icon: 'clock',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            insertMarkdown(formatDate(new Date), ace)
+            editor.insertMarkdown(formatDate(new Date))
         }
     },
     {
@@ -370,7 +358,7 @@ export const toolsArray: IToolBarItem[] = [
         icon: 'code',
         action: (editor, ace) => {
             const txt = ace.getSelectedText();
-            insertMarkdown('`' + txt + '`', ace, false, {row: 0, column: txt ? 0 : -1})
+            editor.insertMarkdown('`' + txt + '`', false, {row: 0, column: txt ? 0 : -1})
         }
     },
     {
@@ -379,10 +367,9 @@ export const toolsArray: IToolBarItem[] = [
         icon: 'keyboard',
         action: (editor, ace) => {
             const txt = ace.getSelectedText();
-            insertMarkdown('<kbd>' + txt + '</kbd>', ace, false, {row: 0, column: txt ? 0 : -6})
+            editor.insertMarkdown('<kbd>' + txt + '</kbd>', false, {row: 0, column: txt ? 0 : -6})
         }
     },
-
     {
         id: 'code-block',
         name: '代码块',
@@ -407,7 +394,7 @@ export const toolsArray: IToolBarItem[] = [
                 <div id={`aceeditor${id}`} style={{height: '20rem', marginTop: '1rem'}}
                      className='display-block hui-input no-resize'/>
             </form>, "插入代码块", (dialog) => {
-                insertMarkdown('\n```' + lang + '\n' + aceEditor.getValue().replace(/`/g, '&#96;') + '\n```\n', ace)
+                editor.insertCodeBlock(aceEditor.getValue(), lang);
             }, {
                 icon: 'file-code',
                 width: 500, height: 500,
@@ -461,7 +448,7 @@ export const toolsArray: IToolBarItem[] = [
                     const [namespace, name] = key.split('_');
                     md += `:${namespace} ${name}:\n`
                 }
-                insertMarkdown(md, ace)
+                editor.insertMarkdown(md)
             }, {
                 icon: <Icon name='font-awesome' namespace={"fab"} className='hui-dialog-icon'/>,
                 width: 800,
@@ -487,11 +474,11 @@ range(1, 6).forEach(level => {
 
             if (line.startsWith(text)) {
                 ace.getSelection().selectLine();
-                insertMarkdown(line.replace(text, '') + "\n", ace);
+                editor.insertMarkdown(line.replace(text, '') + "\n");
                 ace.moveCursorTo(pos.row, pos.column - level);
             } else if (/^#{1,6} (.*?)/i.test(line)) {
                 ace.getSelection().selectLine();
-                insertMarkdown(line.replace(/#{1,6} /, text) + "\n", ace);
+                editor.insertMarkdown(line.replace(/#{1,6} /, text) + "\n");
                 ace.moveCursorTo(pos.row, pos.column - level);
             } else {
                 pos.column = 0;
@@ -512,9 +499,9 @@ range(1, 6).forEach(level => {
                 , prefix = id === 'list-ol' ? '1. ' : '- ';
 
             if (text) {
-                insertMarkdown(prefix + text.replace(/\n/g, `\n${prefix}`), ace)
+                editor.insertMarkdown(prefix + text.replace(/\n/g, `\n${prefix}`))
             } else {
-                insertMarkdown(prefix, ace, true)
+                editor.insertMarkdown(prefix, true)
             }
         }
     })
