@@ -73,6 +73,12 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         })
     }
 
+    /**
+     * 插入内容到当前编辑器
+     * @param content 内容
+     * @param toFirst 是否插入到行头
+     * @param forward 插入后光标移动位置
+     */
     public insertMarkdown = (content: string, toFirst: boolean = false, forward: Point = null) => {
         if (!this.ace) return;
         if (toFirst) {
@@ -91,6 +97,12 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         this.ace.focus();
     };
 
+    /**
+     * 插入图片
+     * @param url 图片地址
+     * @param description 图片描述
+     * @param link 点击图片跳转的地址
+     */
     public insertImage = (url: string, description?: string, link?: string) => {
         description = description ? ` "${description}"` : '""';
 
@@ -99,11 +111,19 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         this.insertMarkdown(`\n${md}\n`, true)
     };
 
+    /**
+     * 插入代码块
+     * @param code 代码
+     * @param language 语言
+     */
     public insertCodeBlock = (code: string, language?: string) => {
         code = code.replace(/`/g, '&#96;');
         this.insertMarkdown('\n```' + language + "\n" + code + '\n```\n')
     };
 
+    /**
+     * 清空文档
+     */
     public clean = () => {
         this.ace.setValue('')
     };
@@ -135,9 +155,6 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         this.ace.getSession().on("changeScrollTop", scrollTop => {
             this.state.showPreview && this.props.bindScroll && (this.refPreview.current.scrollTop = scrollTop)
         });
-        this.refPreview.current.addEventListener('scroll', () => {
-            this.ace.getSession().setScrollTop(this.refPreview.current.scrollTop)
-        })
     }
 
     componentWillReceiveProps(nextProps: MarkdownEditorProps) {
@@ -155,6 +172,10 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
             this.silent = false;
         }
     }
+
+    private onPreviewScroll = () => {
+        this.ace.getSession().setScrollTop(this.refPreview.current.scrollTop)
+    };
 
     private handlePastedFile: ClipboardEventHandler<HTMLDivElement> = (e) => {
         if (!this.props.enableUpload || e.clipboardData.files.length < 1) return true;
@@ -203,7 +224,7 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
                      onPaste={this.handlePastedFile}
                      onDrag={this.handleDraggedFile}/>
                 {this.state.showPreview ?
-                    <div className="flex-1 markdown-body"
+                    <div className="flex-1 markdown-body" onScroll={this.onPreviewScroll}
                          ref={this.refPreview}/> : undefined}
             </div>
         </div>
