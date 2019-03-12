@@ -30,7 +30,7 @@ export interface MarkdownEditorProps {
     dialogConfirm?: typeof Dialog.confirm
     dialogAlert?: typeof Dialog.alert
     enableUpload?: boolean
-    onFileUpload?: (files: FileList, editor: MarkdownEditor) => boolean | void
+    onFileUpload?: (files: FileList, editor: MarkdownEditor, callback?: (url: string) => void) => boolean | void
 }
 
 export interface MarkdownEditorState {
