@@ -1,6 +1,6 @@
 {
   "name": "hefang-ui-mdeditor",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "基于 hefang-ui-react 开发的 Markdown 编辑器",
   "main": "index.js",
   "scripts": {

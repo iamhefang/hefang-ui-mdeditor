@@ -18,9 +18,11 @@ const tools: IToolBarItem[] = [
     }
 ];
 
-render(<MarkdownEditor enableUpload={true} value={repeat(guid(), 20)} onFileUpload={(files, editor) => {
-    const file = files.item(0)
-        , data = new Blob([file])
-        , dataUrl = URL.createObjectURL(data);
-    editor.insertImage(dataUrl, 'from pasted')
-}}/>, document.body);
+render(<MarkdownEditor enableUpload={true}
+                       value={repeat(guid(), 20)}
+                       onFileUpload={(files, editor, callback) => {
+                           const file = files.item(0)
+                               , data = new Blob([file])
+                               , dataUrl = URL.createObjectURL(data);
+                           callback(dataUrl)
+                       }}/>, document.body);

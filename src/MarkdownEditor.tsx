@@ -1,7 +1,7 @@
 import * as React from "react";
 import {RefObject} from "react";
 import {Ace, edit} from "ace-builds";
-import {execute, guid, isFunction, type, Types} from "hefang-js";
+import {execute, extend, guid, isFunction, type, Types} from "hefang-js";
 import {Dialog, Icon} from "hefang-ui-react";
 import * as marked from "marked"
 import {Renderer} from "marked"
@@ -12,6 +12,8 @@ import {IToolBarItem} from "./IToolBarItem";
 import {ClipboardEventHandler} from "react";
 import {DragEventHandler} from "react";
 import Point = Ace.Point;
+import {ShowInsertImageDialogOption} from "./options/ShowInsertImageDialogOption";
+import {OnFileUpload} from "./types/OnFileUpload";
 
 
 declare const PR;
@@ -30,7 +32,7 @@ export interface MarkdownEditorProps {
     dialogConfirm?: typeof Dialog.confirm
     dialogAlert?: typeof Dialog.alert
     enableUpload?: boolean
-    onFileUpload?: (files: FileList, editor: MarkdownEditor, callback?: (url: string) => void) => boolean | void
+    onFileUpload?: OnFileUpload
 }
 
 export interface MarkdownEditorState {
@@ -60,6 +62,7 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
     private id: string;
     private silent: boolean = false;
     private refPreview: RefObject<HTMLDivElement> = React.createRef();
+    private refEditor: RefObject<HTMLDivElement> = React.createRef();
     private toolMap: { [key: string]: IToolBarItem } = toolsMap;
 
     constructor(props: MarkdownEditorProps) {
@@ -105,9 +108,8 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
      */
     public insertImage = (url: string, description?: string, link?: string) => {
         description = description ? ` "${description}"` : '""';
-
-        const img = `![${description.trim()}](${url}${description})`;
-        let md = link ? `[${img}](${link}${description})` : img;
+        const img = `![${description.trim()}](${url} ${description})`;
+        let md = link ? `[${img}](${link} ${description})` : img;
         this.insertMarkdown(`\n${md}\n`, true)
     };
 
@@ -119,6 +121,57 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
     public insertCodeBlock = (code: string, language?: string) => {
         code = code.replace(/`/g, '&#96;');
         this.insertMarkdown('\n```' + language + "\n" + code + '\n```\n')
+    };
+
+    /**
+     * 显示添加图片弹窗
+     * @param options
+     */
+    public showInsertImageDialog = (options?: ShowInsertImageDialogOption) => {
+        const id = guid();
+        options = extend({
+            link: "",
+            description: "",
+            url: "",
+            showUploadButton: this.props.enableUpload
+        }, options || {});
+        Dialog.confirm(<form id={id} className='hui-dialog-content'>
+            <div className="form-group">
+                <label htmlFor="editorAddLinkTitle" className='display-block'>图片地址</label>
+                <div className="display-flex-row">
+                    <input type="url" className='hui-input flex-1'
+                           defaultValue={options.url || ""}
+                           name='url' placeholder={'图片所在地址'}
+                           id={'url' + id}/>
+                    {this.props.enableUpload && options.showUploadButton ? <label className="hui-btn">
+                        <input type="file" style={{display: 'none'}} accept="image/*" onChange={e => {
+                            execute(this.props.onFileUpload, e.target.files, this, (url: string) => {
+                                (document.getElementById('url' + id) as HTMLInputElement).value = url;
+                            });
+                        }}/> 上传
+                    </label> : undefined}
+                </div>
+            </div>
+            <div className="form-group">
+                <label htmlFor="editorAddLinkUrl" className='display-block'>图片描述</label>
+                <input type="text" className='hui-input display-block' name='description'
+                       defaultValue={options.description}/>
+            </div>
+            <div className="form-group">
+                <label htmlFor="editorAddLinkUrl" className='display-block'>点击跳转</label>
+                <input type="url"
+                       className='hui-input display-block'
+                       name='link'
+                       placeholder='图片点击时跳转的链接'
+                       defaultValue={options.link}/>
+            </div>
+        </form>, '插入图片', (dialog) => {
+            const form = dialog.contentElement() as HTMLFormElement
+                , url = form.url.value
+                , description = form.description.value
+                , link = form.link.value;
+            this.insertImage(url, description, link);
+        }, {icon: 'image', width: 400, height: 355, id})
     };
 
     /**
@@ -142,7 +195,7 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
     };
 
     componentDidMount() {
-        this.ace = edit(`editor${this.id}`, {
+        this.ace = edit(this.refEditor.current, {
             mode: 'ace/mode/markdown',
             theme: 'ace/theme/github',
             wrap: 'free'
@@ -155,6 +208,15 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         this.ace.getSession().on("changeScrollTop", scrollTop => {
             this.state.showPreview && this.props.bindScroll && (this.refPreview.current.scrollTop = scrollTop)
         });
+        this.refEditor.current.ondrop = this.handleDraggedFile;
+        const dropHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        };
+        this.refEditor.current.ondragstart = dropHandler;
+        this.refEditor.current.ondragover = dropHandler;
+        this.refEditor.current.ondragleave = dropHandler;
     }
 
     componentWillReceiveProps(nextProps: MarkdownEditorProps) {
@@ -179,16 +241,23 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
 
     private handlePastedFile: ClipboardEventHandler<HTMLDivElement> = (e) => {
         if (!this.props.enableUpload || e.clipboardData.files.length < 1) return true;
-        execute(this.props.onFileUpload, e.clipboardData.files, this);
+        execute(this.props.onFileUpload, e.clipboardData.files, this, (url) => {
+            this.showInsertImageDialog({url, showUploadButton: false})
+        });
         e.stopPropagation();
         e.preventDefault();
         return false;
     };
 
-    private handleDraggedFile: DragEventHandler<HTMLDivElement> = (e) => {
+    private handleDraggedFile = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         if (!this.props.enableUpload || e.dataTransfer.files.length < 1) return;
         e.dataTransfer.dropEffect = "copy";
-        execute(this.props.onFileUpload, e.dataTransfer.files, this)
+        execute(this.props.onFileUpload, e.dataTransfer.files, this, url => {
+            this.showInsertImageDialog({showUploadButton: false, url})
+        });
+        return false;
     };
 
     private renderToolbar = () => {
@@ -220,9 +289,7 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
                 {this.renderToolbar()}
             </div>
             <div className='flex-1 display-flex-row'>
-                <div id={`editor${this.id}`} className='flex-1 markdown-editor-ace'
-                     onPaste={this.handlePastedFile}
-                     onDrag={this.handleDraggedFile}/>
+                <div className='flex-1 markdown-editor-ace' ref={this.refEditor} onPaste={this.handlePastedFile}/>
                 {this.state.showPreview ?
                     <div className="flex-1 markdown-body" onScroll={this.onPreviewScroll}
                          ref={this.refPreview}/> : undefined}

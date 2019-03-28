@@ -162,37 +162,9 @@ export const toolsArray: IToolBarItem[] = [
         name: '图片',
         icon: 'image',
         action: (editor: MarkdownEditor, ace: Ace.Editor) => {
-            const id = guid();
-            editor.props.dialogConfirm(<form id={id} className='hui-dialog-content'>
-                <div className="form-group">
-                    <label htmlFor="editorAddLinkTitle" className='display-block'>图片地址</label>
-                    <div className="display-flex-row">
-                        <input type="url" className='hui-input flex-1' name='url' placeholder={'图片所在地址'}
-                               id={'url' + guid()}/>
-                        {editor.props.enableUpload ? <label className="hui-btn">
-                            <input type="file" style={{display: 'none'}} onChange={e => {
-                                execute(editor.props.onFileUpload, e.target.files, (url: string) => {
-                                    (document.getElementById('url' + guid()) as HTMLInputElement).value = url;
-                                })
-                            }}/> 上传
-                        </label> : undefined}
-                    </div>
-                </div>
-                <div className="form-group">
-                    <label htmlFor="editorAddLinkUrl" className='display-block'>图片描述</label>
-                    <input type="text" className='hui-input display-block' name='description'/>
-                </div>
-                <div className="form-group">
-                    <label htmlFor="editorAddLinkUrl" className='display-block'>点击跳转</label>
-                    <input type="url" className='hui-input display-block' name='link' placeholder='图片点击时跳转的链接'/>
-                </div>
-            </form>, '插入图片', (dialog) => {
-                const form = dialog.contentElement() as HTMLFormElement
-                    , url = form.url.value
-                    , description = form.description.value
-                    , link = form.link.value;
-                editor.insertImage(url, description, link)
-            }, {icon: 'image', width: 400, height: 355})
+            console.log(1);
+            editor.showInsertImageDialog();
+            console.log(2);
         }
     },
     {
