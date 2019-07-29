@@ -1,5 +1,5 @@
 import * as React from "react";
-import {RefObject} from "react";
+import {ClipboardEventHandler, RefObject} from "react";
 import {Ace, edit} from "ace-builds";
 import {execute, extend, guid, isFunction, type, Types} from "hefang-js";
 import {Dialog, Icon} from "hefang-ui-react";
@@ -9,11 +9,9 @@ import "code-prettify";
 import {FontAwesomeRenderer} from "./marked/renderer/FontAwesomeRenderer";
 import {toolsMap} from "./toolbars";
 import {IToolBarItem} from "./IToolBarItem";
-import {ClipboardEventHandler} from "react";
-import {DragEventHandler} from "react";
-import Point = Ace.Point;
 import {ShowInsertImageDialogOption} from "./options/ShowInsertImageDialogOption";
 import {OnFileUpload} from "./types/OnFileUpload";
+import Point = Ace.Point;
 
 
 declare const PR;
@@ -139,10 +137,11 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
             <div className="form-group">
                 <label htmlFor="editorAddLinkTitle" className='display-block'>图片地址</label>
                 <div className="display-flex-row">
-                    <input type="url" className='hui-input flex-1'
-                           defaultValue={options.url || ""}
-                           name='url' placeholder={'图片所在地址'}
-                           id={'url' + id}/>
+                    <input
+                        type="url" className='hui-input flex-1'
+                        defaultValue={options.url || ""}
+                        name='url' placeholder={'图片所在地址'}
+                        id={'url' + id}/>
                     {this.props.enableUpload && options.showUploadButton ? <label className="hui-btn">
                         <input type="file" style={{display: 'none'}} accept="image/*" onChange={e => {
                             execute(this.props.onFileUpload, e.target.files, this, (url: string) => {
@@ -154,16 +153,18 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
             </div>
             <div className="form-group">
                 <label htmlFor="editorAddLinkUrl" className='display-block'>图片描述</label>
-                <input type="text" className='hui-input display-block' name='description'
-                       defaultValue={options.description}/>
+                <input
+                    type="text" className='hui-input display-block' name='description'
+                    defaultValue={options.description}/>
             </div>
             <div className="form-group">
                 <label htmlFor="editorAddLinkUrl" className='display-block'>点击跳转</label>
-                <input type="url"
-                       className='hui-input display-block'
-                       name='link'
-                       placeholder='图片点击时跳转的链接'
-                       defaultValue={options.link}/>
+                <input
+                    type="url"
+                    className='hui-input display-block'
+                    name='link'
+                    placeholder='图片点击时跳转的链接'
+                    defaultValue={options.link}/>
             </div>
         </form>, '插入图片', (dialog) => {
             const form = dialog.contentElement() as HTMLFormElement

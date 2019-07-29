@@ -142,12 +142,12 @@ export const toolsArray: IToolBarItem[] = [
                     , columns = +form.columns.value
                     , align = form.align.value
                     , lines = repeat('  |  ', columns + 1).trim()
-                    , lineArr = lines.split('')
+                    , lineArr = repeat("|", columns + 1).split('')
                     , alignMap = {
-                    left: ':-----------',
-                    center: ':-----------:',
-                    right: '-----------:',
-                    none: '-----------'
+                    left: ':-------',
+                    center: ':-------:',
+                    right: '-------:',
+                    none: '-------'
                 };
                 editor.insertMarkdown(`\n${lines}\n${lineArr.join(alignMap[align])}\n${repeat(lines + "\n", rows)}\n`)
             }, {
