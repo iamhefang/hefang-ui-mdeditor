@@ -1,7 +1,7 @@
 import * as React from "react";
 import {ClipboardEventHandler, RefObject} from "react";
-import {Ace, edit} from "ace-builds";
-import {execute, extend, guid, isFunction, type, Types} from "hefang-js";
+import {Ace, config, edit} from "ace-builds";
+import {execute, extend, guid, isFunction, type} from "hefang-js";
 import {Dialog, Icon} from "hefang-ui-react";
 import * as marked from "marked"
 import {Renderer} from "marked"
@@ -31,6 +31,7 @@ export interface MarkdownEditorProps {
     dialogAlert?: typeof Dialog.alert
     enableUpload?: boolean
     onFileUpload?: OnFileUpload
+    aceBasePath: string
 }
 
 export interface MarkdownEditorState {
@@ -53,7 +54,8 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
         theme: 'light',
         dialogConfirm: Dialog.confirm,
         dialogAlert: Dialog.alert,
-        customTools: []
+        customTools: [],
+        aceBasePath: "./"
     };
     private ace: Ace.Editor;
     private renderer: Renderer = new FontAwesomeRenderer();
@@ -66,6 +68,7 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
     constructor(props: MarkdownEditorProps) {
         super(props);
         this.id = props.id || guid();
+        config.set("basePath", props.aceBasePath);
         this.state = {
             showPreview: props.showPreview,
         };
@@ -237,7 +240,7 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
     }
 
     private onPreviewScroll = () => {
-        this.ace.getSession().setScrollTop(this.refPreview.current.scrollTop)
+        // this.ace.getSession().setScrollTop(this.refPreview.current.scrollTop)
     };
 
     private handlePastedFile: ClipboardEventHandler<HTMLDivElement> = (e) => {
@@ -270,7 +273,7 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
             } else if (id in this.toolMap) {
                 const tool = this.toolMap[id];
                 let icon = tool.icon;
-                if (type(icon) === Types.String) {
+                if (type(icon) === "String") {
                     icon = <Icon name={icon as string}/>
                 } else if (isFunction(icon)) {
                     icon = execute(icon, this);
@@ -292,8 +295,10 @@ export class MarkdownEditor extends React.Component<MarkdownEditorProps, Markdow
             <div className='flex-1 display-flex-row'>
                 <div className='flex-1 markdown-editor-ace' ref={this.refEditor} onPaste={this.handlePastedFile}/>
                 {this.state.showPreview ?
-                    <div className="flex-1 markdown-body" onScroll={this.onPreviewScroll}
-                         ref={this.refPreview}/> : undefined}
+                    <div
+                        className="flex-1 markdown-body"
+                        onScroll={this.onPreviewScroll}
+                        ref={this.refPreview}/> : undefined}
             </div>
         </div>
     }
