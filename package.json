@@ -34,7 +34,7 @@
     "hefang-js": "^1.2.1",
     "hefang-ui-react": "^1.0.19",
     "katex": "^0.10.1",
-    "marked": "^0.6.1",
+    "marked": "^1.1.1",
     "react": "^16.4.0",
     "react-dom": "^16.4.0"
   }
